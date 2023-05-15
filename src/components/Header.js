@@ -76,7 +76,11 @@ const Header = () => {
             {socials.map(({ icon, url, id }) => {
               return (
                 <a href={url} key={id}>
-                  <FontAwesomeIcon icon={icon} size="2x"></FontAwesomeIcon>
+                  <FontAwesomeIcon
+                    icon={icon}
+                    size="2x"
+                    style={{ marginRight: "20px" }}
+                  ></FontAwesomeIcon>
                 </a>
               );
             })}
