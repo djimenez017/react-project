@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { ErrorMessage, useFormik } from "formik";
+import { useFormik } from "formik";
 import {
   Box,
   Button,
@@ -21,6 +21,24 @@ const LandingSection = () => {
   const { isLoading, response, submit } = useSubmit();
   const { onOpen } = useAlertContext();
 
+  useEffect(() => {
+    if (response) {
+      if (response.type === "success") {
+        // Show success alert
+        onOpen({
+          type: "success",
+          message: response.message,
+        });
+      } else if (response.type === "error") {
+        // Show error alert
+        onOpen({
+          type: "error",
+          message: response.message,
+        });
+      }
+    }
+  }, [response]);
+
   const formik = useFormik({
     initialValues: {
       firstName: "",
@@ -28,19 +46,34 @@ const LandingSection = () => {
       type: "",
       comment: "",
     },
-    onSubmit: {},
+    onSubmit: async (values, { resetForm }) => {
+      const submitResponse = await submit(values);
+
+      if (submitResponse && submitResponse.type === "success") {
+        // Show success alert with the first name
+        onOpen({
+          type: "success",
+          message: `Form submitted successfully! First Name: ${values.firstName}`,
+        });
+        resetForm();
+      } else {
+        // Show error alert
+        onOpen({
+          type: "error",
+          message: `Form submission failed: ${
+            submitResponse ? submitResponse.message : "Unknown error"
+          }`,
+        });
+      }
+    },
     validationSchema: Yup.object({
       firstName: Yup.string().required("First name is required"),
       email: Yup.string().email().required("Email is required"),
-      type: Yup.string().oneOf([
-        "Freelance project proposal",
-        " Open source consultancy session",
-        "Other",
-      ]),
-      comment: Yup.string().required(),
+      type: Yup.string().oneOf(["hireMe", "openSource", "other"]),
+      comment: Yup.string().required("Comment is required"),
     }),
   });
-  console.log(response);
+
   return (
     <FullScreenSection
       isDarkBackground
@@ -62,8 +95,7 @@ const LandingSection = () => {
                 <Input
                   id="firstName"
                   name="firstName"
-                  onChange={formik.handleChange}
-                  value={formik.values.firstName}
+                  {...formik.getFieldProps("firstName")}
                 />
                 <FormErrorMessage>{formik.errors.firstName}</FormErrorMessage>
               </FormControl>
@@ -75,19 +107,13 @@ const LandingSection = () => {
                   id="email"
                   name="email"
                   type="email"
-                  onChange={formik.handleChange}
-                  value={formik.values.email}
+                  {...formik.getFieldProps("email")}
                 />
                 <FormErrorMessage>{formik.errors.email}</FormErrorMessage>
               </FormControl>
-              <FormControl isInvalid={false}>
+              <FormControl>
                 <FormLabel htmlFor="type">Type of enquiry</FormLabel>
-                <Select
-                  id="type"
-                  name="type"
-                  onChange={formik.handleChange}
-                  value={formik.values.type}
-                >
+                <Select id="type" name="type" {...formik.getFieldProps("type")}>
                   <option value="hireMe">Freelance project proposal</option>
                   <option value="openSource">
                     Open source consultancy session
@@ -103,12 +129,16 @@ const LandingSection = () => {
                   id="comment"
                   name="comment"
                   height={250}
-                  onChange={formik.handleChange}
-                  value={formik.values.comment}
+                  {...formik.getFieldProps("comment")}
                 />
                 <FormErrorMessage>{formik.errors.comment}</FormErrorMessage>
               </FormControl>
-              <Button type="submit" colorScheme="purple" width="full">
+              <Button
+                type="submit"
+                colorScheme="purple"
+                width="full"
+                isLoading={isLoading}
+              >
                 Submit
               </Button>
             </VStack>
