@@ -70,7 +70,9 @@ const LandingSection = () => {
       firstName: Yup.string().required("First name is required"),
       email: Yup.string().email().required("Email is required"),
       type: Yup.string().oneOf(["hireMe", "openSource", "other"]),
-      comment: Yup.string().required("Comment is required"),
+      comment: Yup.string()
+        .min(25, "Must be at least 25 characters")
+        .required("Comment is required"),
     }),
   });
 
